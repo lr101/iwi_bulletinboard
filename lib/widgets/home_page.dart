@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:iwi_bulletinboard/widgets/settings_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -28,14 +29,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
     _refreshAll(); // Load announcements when the widget is first created
     _requestPermission(); // Request for alert permission
     WidgetsBinding.instance.addObserver(this); // Observer for detecting when the app is opened (via a notification)
-    initPlatformState(); // Register background task
+    _initPlatformState(); // Register background task
   }
 
 
-  Future<void> initPlatformState() async {
-    // Configure BackgroundFetch.
+  Future<void> _initPlatformState([int? fetchInterval]) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (fetchInterval == null) {
+      fetchInterval = prefs.getInt("interval") ?? 15;
+    } else {
+      prefs.setInt("interval", fetchInterval);
+    }
+
     await BackgroundFetch.configure(BackgroundFetchConfig(
-        minimumFetchInterval: 15,
+        minimumFetchInterval: fetchInterval,
         stopOnTerminate: false,
         enableHeadless: true,
         requiresBatteryNotLow: false,
@@ -105,14 +112,31 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: const Color.fromRGBO(100, 55, 140, 1.0),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("$schwarzesBrett Schwarzes Brett"),
-              IconButton(onPressed: () => launchUrl(Uri.parse("https://intranet.hka-iwi.de/iwii/info/dataprotection")), icon: Icon(Icons.info_outline))
-            ],
-          )
+        backgroundColor: const Color.fromRGBO(100, 55, 140, 1.0),
+        title: Text("$schwarzesBrett Schwarzes Brett"),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () async {
+              int interval =( await  SharedPreferences.getInstance()).getInt("interval") ?? 15;
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsPage(
+                  schwarzesBrett: schwarzesBrett,
+                  interval: interval,
+                  onSchwarzesBrettChanged: (newSetting) {
+                    setState(() {
+                      schwarzesBrett = newSetting;
+                      _refreshAll(); // Update the main page with new settings
+                    });
+                  },
+                  onIntervalChanged: (int) {
+                    _initPlatformState(int);
+                  },
+                )),
+              );}
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,
@@ -170,13 +194,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
         mainAxisSize: MainAxisSize.min,
         children: [
           FloatingActionButton(
-            onPressed: _showSettingsDialog, // Open settings dialog
-            tooltip: 'Settings',
-            backgroundColor: const Color.fromRGBO(100, 55, 140, 1.0),
-            child: const Icon(Icons.settings),
-          ),
-          const SizedBox(height: 10), // Spacing between the buttons
-          FloatingActionButton(
+            heroTag: "2",
             onPressed: _refresh, // Refresh action
             tooltip: 'Refresh',
             backgroundColor: const Color.fromRGBO(100, 55, 140, 1.0),
@@ -186,43 +204,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
       ),
     );
   }
-
-  Future<void> _showSettingsDialog() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: true, // user must tap button for close dialog!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Studiengang:'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <String>['INFB', 'INFM', 'MINB', 'MKIB']
-                  .map((String setting) {
-                return RadioListTile<String>(
-                  title: Text(setting),
-                  value: setting,
-                  groupValue: schwarzesBrett,
-                  onChanged: (String? value) {
-                    setState(() {
-                      if (value != null) {
-                        schwarzesBrett = value;
-                        prefs.setString('setting', value);
-                        _refresh();
-                      }
-                    });
-                    Navigator.of(context).pop(); // Close the dialog
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
 
 
 }
