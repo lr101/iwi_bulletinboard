@@ -18,7 +18,7 @@ class FetchNews {
       DateTime now = DateTime.now();
       query["from"] = DateFormat('yyyy-MM-dd').format(now);;
     }
-    Response response = await RestAPI.createHttpsRequest("/iwii/REST/newsbulletinboard/$currentSetting" , {}, 0);
+    Response response = await RestAPI.createHttpsRequest("/iwii/REST/newsbulletinboard/$currentSetting" , query, 0);
     if (response.statusCode == 200) {
       List<Announcement> members = [];
       List<dynamic> values = json.decode(response.body);

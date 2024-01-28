@@ -90,9 +90,13 @@ class Announcement implements Comparable<Announcement> {
     List<Announcement> savedList = prefs.getStringList("announcements")?.map((e) => Announcement.fromJson(json.decode((e)))).toList()  ?? [];
     try {
       List<Announcement> newList = await FetchNews.fetchAnnouncements(true);
-      savedList.addAll(newList);
-      prefs.setStringList("announcements", savedList.map((e) => json.encode(e.toJson())).toList());
-      return savedList.where((e) => !newList.contains(e)).toList();
+      if (newList.isNotEmpty) {
+        List<Announcement> newElements = savedList.where((e) =>
+        !newList.contains(e)).toList();
+        savedList.addAll(newElements);
+        prefs.setStringList("announcements", savedList.map((e) => json.encode(e.toJson())).toList());
+      }
+      return savedList;
     } catch(_) {
       return [];
     }

@@ -18,7 +18,7 @@ class NotificationService {
 
   Future<void> initializePlatformNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_stat_iwiwhite');
+    AndroidInitializationSettings('@mipmap/ic_launcher_monochrome');
 
     const InitializationSettings initializationSettings =
     InitializationSettings(
@@ -62,7 +62,8 @@ class NotificationService {
       priority: Priority.max,
       playSound: true,
       ticker: 'ticker',
-      color: Color(0xffffffff),
+      color: Color(0xff64378c),
+      colorized: true,
     );
 
     final details = await _localNotifications.getNotificationAppLaunchDetails();
