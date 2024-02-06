@@ -6,6 +6,8 @@ import 'package:settings_ui/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../util/notification_service.dart';
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.schwarzesBrett, required this.onSchwarzesBrettChanged, required this.onIntervalChanged, required this.interval});
 
@@ -97,6 +99,19 @@ class _SettingsPage extends State<SettingsPage> {
                 title: Text('Aktualisierungsintervall'),
                 value: Text(interval.toString() + " Minuten"),
                 onPressed: (_) => _showIntervalDialog(context),
+              ),
+              SettingsTile.navigation(
+                leading: Icon(Icons.notifications),
+                title: Text('Push-Benachrichtigung'),
+                value: Text("Drücken zum Testen"),
+                onPressed: (_) {
+                  NotificationService().showLocalNotification(
+                      id: 1,
+                      title: "Test-Benachrichtigung",
+                      body: "Subtitel",
+                      payload: "Dies ist der Testinhalt"
+                  );
+                },
               ),
             ],
           ),
