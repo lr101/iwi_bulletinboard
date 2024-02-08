@@ -95,7 +95,6 @@ class Announcement implements Comparable<Announcement> {
         List<Announcement> newElements = newList.where((e) => !savedList.any((a) => a.id == e.id)).toList();
         savedList.addAll(newElements);
         await prefs.setStringList("announcements", savedList.map((e) => json.encode(e.toJson())).toList());
-        Future.delayed(Duration(seconds: 5));
       }
       return newList;
     } catch(_) {

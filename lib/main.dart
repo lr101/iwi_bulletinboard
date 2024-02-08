@@ -19,8 +19,6 @@ void callbackDispatcher(HeadlessTask task)  async {
   String taskId = task.taskId;
   bool isTimeout = task.timeout;
   if (isTimeout) {
-    // This task has exceeded its allowed running-time.
-    // You must stop what you're doing and immediately .finish(taskId)
     print("[BackgroundFetch] Headless task timed-out: $taskId");
     BackgroundFetch.finish(taskId);
     return;
@@ -46,6 +44,7 @@ Future<void> callNotification() async {
         payload: newNews.content
     );
   }
+  await Future.delayed(Duration(seconds: 5));
 }
 
 Future<void> main() async {
