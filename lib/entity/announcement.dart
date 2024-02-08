@@ -87,6 +87,7 @@ class Announcement implements Comparable<Announcement> {
 
   static Future<List<Announcement>> getNewElements() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.reload();
     List<Announcement> savedList = prefs.getStringList("announcements")?.map((e) => Announcement.fromJson(json.decode((e)))).toList()  ?? [];
     try {
       List<Announcement> newList = await FetchNews.fetchAnnouncements(true);
@@ -94,6 +95,7 @@ class Announcement implements Comparable<Announcement> {
         List<Announcement> newElements = newList.where((e) => !savedList.any((a) => a.id == e.id)).toList();
         savedList.addAll(newElements);
         await prefs.setStringList("announcements", savedList.map((e) => json.encode(e.toJson())).toList());
+        Future.delayed(Duration(seconds: 5));
       }
       return newList;
     } catch(_) {
