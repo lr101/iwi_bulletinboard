@@ -43,7 +43,7 @@ class Announcement implements Comparable<Announcement> {
   factory Announcement.fromJson(Map<String, dynamic> json) {
     return Announcement(
       changed: json['changed'],
-      content: json['content'],
+      content: json['content'] is String ? utf8.decode((json['content'] as String).codeUnits) : "",
       courseOfStudies: List<String>.from(json['courseOfStudies']),
       deleteOnExpiration: json['deleteOnExpiration'],
       emailOwner: json['emailOwner'],
@@ -54,8 +54,8 @@ class Announcement implements Comparable<Announcement> {
       publicationDate: DateTime.parse(json['publicationDate']),
       publicationTimestamp: DateTime.parse(json['publicationTimestamp']),
       studentCouncil: json['studentCouncil'],
-      subTitle: json['subTitle'],
-      title: json['title'],
+      subTitle: json['subTitle'] is String ? utf8.decode((json['subTitle'] as String).codeUnits) : "",
+      title: json['title'] is String ? utf8.decode((json['title'] as String).codeUnits) : "",
       type: json['type'],
     );
   }
@@ -90,7 +90,7 @@ class Announcement implements Comparable<Announcement> {
     prefs.reload();
     List<Announcement> savedList = prefs.getStringList("announcements")?.map((e) => Announcement.fromJson(json.decode((e)))).toList()  ?? [];
     try {
-      List<Announcement> newList = await FetchNews.fetchAnnouncements(true);
+      List<Announcement> newList = await FetchNews.fetchAnnouncements();
       if (newList.isNotEmpty) {
         List<Announcement> newElements = newList.where((e) => !savedList.any((a) => a.id == e.id)).toList();
         savedList.addAll(newElements);

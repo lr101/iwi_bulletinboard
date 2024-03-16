@@ -13,6 +13,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:background_fetch/background_fetch.dart';
 import 'entity/announcement.dart';
 import 'util/notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
 
 @pragma('vm:entry-point')
 void callbackDispatcher(HeadlessTask task)  async {
@@ -31,19 +34,26 @@ void callbackDispatcher(HeadlessTask task)  async {
       print(e.toString());
     }
   }
-  // Do your work here...
   BackgroundFetch.finish(taskId);
 }
 
 Future<void> callNotification() async {
-  for (Announcement newNews in await Announcement.getNewElements()) {
-    await NotificationService().showLocalNotification(
-        id: newNews.id,
-        title: newNews.title,
-        body: newNews.subTitle,
-        payload: newNews.content
-    );
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  List<Announcement> savedList = prefs.getStringList("announcements")?.map((e) => Announcement.fromJson(json.decode((e)))).toList()  ?? [];
+  List<Announcement> newList = await FetchNews.fetchAnnouncements();
+  if (newList.isNotEmpty) {
+    List<Announcement> newElements = newList.where((e) => !savedList.any((a) => a.id == e.id)).toList();
+    await prefs.setStringList("announcements", newList.map((e) => json.encode(e.toJson())).toList());
+    for (Announcement newNews in newElements) {
+      await NotificationService().showLocalNotification(
+          id: newNews.id,
+          title: newNews.title,
+          body: newNews.subTitle + ":\n" + newNews.content,
+          payload: newNews.content
+      );
+    }
   }
+
   await Future.delayed(Duration(seconds: 5));
 }
 

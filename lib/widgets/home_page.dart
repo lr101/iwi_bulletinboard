@@ -20,13 +20,12 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
   List<Announcement> list = [];
-  String schwarzesBrett = "";
+  List<String> schwarzesBrett = [];
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
-    _refreshAll(); // Load announcements when the widget is first created
+    WidgetsBinding.instance.addPostFrameCallback((_) =>  _refreshAll());
     _requestPermission(); // Request for alert permission
     WidgetsBinding.instance.addObserver(this); // Observer for detecting when the app is opened (via a notification)
     _initPlatformState(); // Register background task
@@ -51,7 +50,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
         requiresDeviceIdle: false,
         requiredNetworkType: NetworkType.ANY
     ), (String taskId) async {  // <-- Event handler
-      _refresh();
+      _refreshAll();
       BackgroundFetch.finish(taskId);
     }, (String taskId) async {  // <-- Task timeout handler.
       print("[BackgroundFetch] TASK TIMEOUT taskId: $taskId");
@@ -75,21 +74,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
   }
 
   Future<void> _refreshAll() async {
+    await _loadSettings();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     this.list = await FetchNews.fetchAnnouncements();
+    this.list.removeWhere((element) => element.publicationDate.isBefore(DateTime.now().subtract(Duration(days: 60))));
     setState(() {});
     prefs.setStringList("announcements", list.map((e) => json.encode(e.toJson())).toList());
   }
 
   Future<void> _loadSettings() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    schwarzesBrett = prefs.getString("setting") ?? "INFB";
-  }
-
-
-  Future<void> _refresh() async {
-    list.addAll(await Announcement.getNewElements());
-    setState(() {});
+    schwarzesBrett = prefs.getStringList("setting") ?? ["INFB"];
+    if (schwarzesBrett.isEmpty) {
+      schwarzesBrett = ["INFB"];
+    }
   }
 
   bool isNewDay(int index) {
@@ -104,7 +102,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _refresh();
+      _refreshAll();
     }
   }
 
@@ -113,7 +111,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(100, 55, 140, 1.0),
-        title: Text("$schwarzesBrett Schwarzes Brett"),
+        title: Text("Schwarzes Brett"),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.settings),
@@ -124,7 +122,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
                 MaterialPageRoute(builder: (context) => SettingsPage(
                   schwarzesBrett: schwarzesBrett,
                   interval: interval,
-                  onSchwarzesBrettChanged: (newSetting) {
+                  onSchwarzesBrettChanged: (List<String> newSetting) {
                     setState(() {
                       schwarzesBrett = newSetting;
                       _refreshAll(); // Update the main page with new settings
@@ -139,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _refresh,
+        onRefresh: _refreshAll,
         child: ListView.builder(
           itemCount: list.length,
           itemBuilder: (context, index) {
@@ -163,22 +161,26 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         SelectableText(
-
-                          utf8.decode(list[index].title.codeUnits),
+                          list[index].title,
                           style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
                         ),
                         SelectableText(
-                          utf8.decode(list[index].subTitle.codeUnits),
+                          list[index].subTitle,
                           style: const TextStyle(fontSize: 16.0, fontStyle: FontStyle.italic),
                         ),
                         const SizedBox(height: 10),
                         SelectableText(
-                          utf8.decode(list[index].content.codeUnits),
+                          list[index].content,
                           style: const TextStyle(fontSize: 14.0),
                         ),
                         const SizedBox(height: 10),
                         SelectableText(
-                          utf8.decode(("~ " + list[index].nameOwner).codeUnits),
+                          "~ " + list[index].nameOwner,
+                          style: const TextStyle(fontSize: 12.0, fontStyle: FontStyle.italic),
+                        ),
+                        const SizedBox(height: 5),
+                        SelectableText(
+                          "~ published in: " + list[index].courseOfStudies.join(", "),
                           style: const TextStyle(fontSize: 12.0, fontStyle: FontStyle.italic),
                         ),
                       ],
@@ -195,7 +197,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
         children: [
           FloatingActionButton(
             heroTag: "2",
-            onPressed: _refresh, // Refresh action
+            onPressed: _refreshAll, // Refresh action
             tooltip: 'Refresh',
             backgroundColor: const Color.fromRGBO(100, 55, 140, 1.0),
             child: const Icon(Icons.refresh),

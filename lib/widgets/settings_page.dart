@@ -11,9 +11,9 @@ import '../util/notification_service.dart';
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.schwarzesBrett, required this.onSchwarzesBrettChanged, required this.onIntervalChanged, required this.interval});
 
-  final String schwarzesBrett;
+  final List<String> schwarzesBrett;
   final int interval;
-  final Function(String) onSchwarzesBrettChanged;
+  final Function(List<String> newSetting) onSchwarzesBrettChanged;
   final Function(int) onIntervalChanged;
 
   @override
@@ -22,13 +22,13 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPage extends State<SettingsPage> {
 
-  late String courses;
+  late Set<String> courses;
   late int interval;
 
   @override
   void initState() {
     super.initState();
-    courses = widget.schwarzesBrett;
+    courses = widget.schwarzesBrett.toSet();
     interval = widget.interval;
 
   }
@@ -90,7 +90,7 @@ class _SettingsPage extends State<SettingsPage> {
               SettingsTile.navigation(
                 leading: Icon(Icons.newspaper_outlined),
                 title: Text("Studiengang"),
-                value: Text(courses),
+                value: Text(courses.join(",")),
                 description: Text("Das schwarze Brett des st"),
                 onPressed: (_) => _showSettingsDialog(context),
               ),
@@ -108,7 +108,7 @@ class _SettingsPage extends State<SettingsPage> {
                   NotificationService().showLocalNotification(
                       id: 1,
                       title: "Test-Benachrichtigung",
-                      body: "Subtitel",
+                      body: "Subtitel" + ":\n" + "Dies ist der Testinhalt",
                       payload: "Dies ist der Testinhalt"
                   );
                 },
@@ -177,28 +177,44 @@ class _SettingsPage extends State<SettingsPage> {
       barrierDismissible: true, // user must tap button for close dialog!
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Studiengang:'),
+          title: const Text('Studiengänge:'),
           content: SingleChildScrollView(
-            child: ListBody(
-              children: <String>['INFB', 'INFM', 'MINB', 'MKIB']
-                  .map((String setting) {
-                return RadioListTile<String>(
-                  title: Text(setting),
-                  value: setting,
-                  groupValue: widget.schwarzesBrett,
-                  onChanged: (String? value) {
-                    if (value != null) {
-                      prefs.setString('setting', value);
-                      setState(() {
-                        courses = value;
-                      });
-                      widget.onSchwarzesBrettChanged(value);
-                    }
-                    Navigator.of(context).pop(); // Close the dialog
-                  },
-                );
-              }).toList(),
-            ),
+            child: Column(
+              children: [
+                StatefulBuilder(
+                builder: (context, setStateSB) =>
+                  ListBody(
+                        children: <String>['INFB', 'INFM', 'MINB', 'MKIB'].map((String setting) {
+                          return CheckboxListTile(
+                            title: Text(setting),
+                            value: courses.contains(setting),
+                            onChanged: (value) {
+                              setStateSB(() {
+                                  if (value != null && value) {
+                                    courses.add(setting);
+                                  } else if (value != null) {
+                                    courses.remove(setting);
+                                  }
+                                });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: FloatingActionButton(
+                    child: Icon(Icons.done),
+                      onPressed: () {
+                    widget.onSchwarzesBrettChanged(courses.toList());
+                    setState(() {
+                      prefs.setStringList('setting', courses.toList());
+                    });
+                    Navigator.pop(context);
+                  })
+                )
+              ]
+            )
           ),
         );
       },

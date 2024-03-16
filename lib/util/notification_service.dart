@@ -37,19 +37,11 @@ class NotificationService {
   }
 
   void onDidReceiveLocalNotification(NotificationResponse? response) {
-    var data = response?.payload.toString();
+    dismissNotificationsIfOpenedFromNotification();
   }
 
   static void onDidReceiveBackgroundNotificationResponse(
-      NotificationResponse? response) {
-    var data = response?.payload.toString();
-    print("onDidReceiveBackgroundNotificationResponse");
-    print(data);
-  }
-
-  // void selectNotification(String? payload) {
-  //   if (payload != null && payload.isNotEmpty) {}
-  // }
+      NotificationResponse? response) {}
 
   Future<NotificationDetails> _notificationDetails() async {
     AndroidNotificationDetails androidPlatformChannelSpecifics =
@@ -129,4 +121,9 @@ class NotificationService {
       androidAllowWhileIdle: true,
     );
   }
+
+  void dismissNotificationsIfOpenedFromNotification() {
+      _localNotifications.cancelAll();
+  }
+
 }
