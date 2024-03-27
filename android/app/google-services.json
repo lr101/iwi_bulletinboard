@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "546058026320",
+    "project_id": "iwi-bulletinboard",
+    "storage_bucket": "iwi-bulletinboard.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:546058026320:android:677a2552144ef6cff10055",
+        "android_client_info": {
+          "package_name": "com.lrprojects.iwi_bulletinboard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBOOlpjehWzfM6lCKkm_S5AeHC7N6qWYT4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

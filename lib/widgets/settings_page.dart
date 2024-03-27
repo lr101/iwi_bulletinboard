@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iwi_bulletinboard/widgets/privacy_page.dart';
@@ -6,15 +5,12 @@ import 'package:settings_ui/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../util/notification_service.dart';
-
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key, required this.schwarzesBrett, required this.onSchwarzesBrettChanged, required this.onIntervalChanged, required this.interval});
+  const SettingsPage({super.key, required this.schwarzesBrett, required this.onSchwarzesBrettChanged, required this.interval});
 
-  final List<String> schwarzesBrett;
+  final String schwarzesBrett;
   final int interval;
-  final Function(List<String> newSetting) onSchwarzesBrettChanged;
-  final Function(int) onIntervalChanged;
+  final Function(String newSetting) onSchwarzesBrettChanged;
 
   @override
   State<SettingsPage> createState() => _SettingsPage();
@@ -22,13 +18,13 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPage extends State<SettingsPage> {
 
-  late Set<String> courses;
+  late String courses;
   late int interval;
 
   @override
   void initState() {
     super.initState();
-    courses = widget.schwarzesBrett.toSet();
+    courses = widget.schwarzesBrett;
     interval = widget.interval;
 
   }
@@ -90,28 +86,9 @@ class _SettingsPage extends State<SettingsPage> {
               SettingsTile.navigation(
                 leading: Icon(Icons.newspaper_outlined),
                 title: Text("Studiengang"),
-                value: Text(courses.join(",")),
+                value: Text(courses),
                 description: Text("Das schwarze Brett des st"),
                 onPressed: (_) => _showSettingsDialog(context),
-              ),
-              SettingsTile.navigation(
-                leading: Icon(Icons.timelapse_outlined),
-                title: Text('Aktualisierungsintervall'),
-                value: Text(interval.toString() + " Minuten"),
-                onPressed: (_) => _showIntervalDialog(context),
-              ),
-              SettingsTile.navigation(
-                leading: Icon(Icons.notifications),
-                title: Text('Push-Benachrichtigung'),
-                value: Text("Drücken zum Testen"),
-                onPressed: (_) {
-                  NotificationService().showLocalNotification(
-                      id: 1,
-                      title: "Test-Benachrichtigung",
-                      body: "Subtitel" + ":\n" + "Dies ist der Testinhalt",
-                      payload: "Dies ist der Testinhalt"
-                  );
-                },
               ),
             ],
           ),
@@ -120,55 +97,6 @@ class _SettingsPage extends State<SettingsPage> {
     );
   }
 
-
-
-  void _showIntervalDialog(BuildContext context) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final TextEditingController _controller = TextEditingController();
-    _controller.text = prefs.getInt("interval")?.toString() ?? "15";
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Aktualisierungsintervall'),
-          content: TextFormField(
-            controller: _controller,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              hintText: 'Minuten (>= 15)',
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Abbrechen'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Speichern'),
-              onPressed: () {
-                int value = int.tryParse(_controller.text) ?? 0;
-                if (value >= 15) {
-                  widget.onIntervalChanged(value);
-                  setState(() {
-                    interval = value;
-                  });
-                  Navigator.of(context).pop();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Bitte einen Wert >= 15 eingeben'),
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Future<void> _showSettingsDialog(BuildContext context) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -179,42 +107,25 @@ class _SettingsPage extends State<SettingsPage> {
         return AlertDialog(
           title: const Text('Studiengänge:'),
           content: SingleChildScrollView(
-            child: Column(
-              children: [
-                StatefulBuilder(
-                builder: (context, setStateSB) =>
-                  ListBody(
-                        children: <String>['INFB', 'INFM', 'MINB', 'MKIB'].map((String setting) {
-                          return CheckboxListTile(
-                            title: Text(setting),
-                            value: courses.contains(setting),
-                            onChanged: (value) {
-                              setStateSB(() {
-                                  if (value != null && value) {
-                                    courses.add(setting);
-                                  } else if (value != null) {
-                                    courses.remove(setting);
-                                  }
-                                });
-                            },
-                          );
-                        }).toList(),
-                      ),
-                ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: FloatingActionButton(
-                    child: Icon(Icons.done),
-                      onPressed: () {
-                    widget.onSchwarzesBrettChanged(courses.toList());
-                    setState(() {
-                      prefs.setStringList('setting', courses.toList());
-                    });
-                    Navigator.pop(context);
-                  })
-                )
-              ]
-            )
+            child: ListBody(
+              children: <String>['INFB', 'INFM', 'MINB', 'MKIB'].map((String setting) {
+                return RadioListTile<String>(
+                  title: Text(setting),
+                  value: setting,
+                  groupValue: courses,
+                  onChanged: (String? value) {
+                    if (value != null) {
+                      prefs.setString('setting', value);
+                      setState(() {
+                        courses = value;
+                      });
+                      widget.onSchwarzesBrettChanged(value);
+                    }
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                );
+              }).toList(),
+            ),
           ),
         );
       },

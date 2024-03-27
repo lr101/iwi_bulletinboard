@@ -1,15 +1,12 @@
 import 'dart:convert';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:iwi_bulletinboard/api/fetch_news.dart';
 import 'package:iwi_bulletinboard/widgets/settings_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:iwi_bulletinboard/api/fetch_news.dart';
-import 'package:iwi_bulletinboard/api/rest_api.dart';
-import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:background_fetch/background_fetch.dart';
+
 import '../entity/announcement.dart';
-import '../util/notification_service.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -19,8 +16,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
+
+  static const DEFAULT_TOPIC = "INFM";
+
   List<Announcement> list = [];
-  List<String> schwarzesBrett = [];
+  String schwarzesBrett = DEFAULT_TOPIC;
 
   @override
   void initState() {
@@ -28,35 +28,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
     WidgetsBinding.instance.addPostFrameCallback((_) =>  _refreshAll());
     _requestPermission(); // Request for alert permission
     WidgetsBinding.instance.addObserver(this); // Observer for detecting when the app is opened (via a notification)
-    _initPlatformState(); // Register background task
-  }
-
-
-  Future<void> _initPlatformState([int? fetchInterval]) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (fetchInterval == null) {
-      fetchInterval = prefs.getInt("interval") ?? 15;
-    } else {
-      prefs.setInt("interval", fetchInterval);
-    }
-
-    await BackgroundFetch.configure(BackgroundFetchConfig(
-        minimumFetchInterval: fetchInterval,
-        stopOnTerminate: false,
-        enableHeadless: true,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-        requiresStorageNotLow: false,
-        requiresDeviceIdle: false,
-        requiredNetworkType: NetworkType.ANY
-    ), (String taskId) async {  // <-- Event handler
-      _refreshAll();
-      BackgroundFetch.finish(taskId);
-    }, (String taskId) async {  // <-- Task timeout handler.
-      print("[BackgroundFetch] TASK TIMEOUT taskId: $taskId");
-      BackgroundFetch.finish(taskId);
-    });
-    if (!mounted) return;
   }
 
   @override
@@ -66,17 +37,31 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
   }
 
   Future<void> _requestPermission() async {
-    await Permission.notification.isDenied.then((value) {
-      if (value) {
-        Permission.notification.request();
-      }
-    });
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('User granted permission');
+    } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+      print('User granted provisional permission');
+    } else {
+      print('User declined or has not accepted permission');
+    }
   }
 
   Future<void> _refreshAll() async {
     await _loadSettings();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    this.list = await FetchNews.fetchAnnouncements();
+    this.list = await FetchNews.fetchAnnouncements(schwarzesBrett);
     this.list.removeWhere((element) => element.publicationDate.isBefore(DateTime.now().subtract(Duration(days: 60))));
     setState(() {});
     prefs.setStringList("announcements", list.map((e) => json.encode(e.toJson())).toList());
@@ -84,9 +69,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
 
   Future<void> _loadSettings() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    schwarzesBrett = prefs.getStringList("setting") ?? ["INFB"];
-    if (schwarzesBrett.isEmpty) {
-      schwarzesBrett = ["INFB"];
+    if (prefs.getString("setting") == null) {
+      schwarzesBrett = DEFAULT_TOPIC;
+      await FirebaseMessaging.instance.subscribeToTopic(schwarzesBrett);
+      prefs.setString("setting", DEFAULT_TOPIC);
+    } else {
+      schwarzesBrett = prefs.getString("setting")!;
     }
   }
 
@@ -106,6 +94,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
     }
   }
 
+  Future<void> updateTopics(String newSettings) async {
+    print("Subscribing to:" + newSettings);
+    await FirebaseMessaging.instance.subscribeToTopic(newSettings);
+    print("Unsubscribing from:" + schwarzesBrett);
+    await FirebaseMessaging.instance.unsubscribeFromTopic(schwarzesBrett);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,14 +117,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
                 MaterialPageRoute(builder: (context) => SettingsPage(
                   schwarzesBrett: schwarzesBrett,
                   interval: interval,
-                  onSchwarzesBrettChanged: (List<String> newSetting) {
+                  onSchwarzesBrettChanged: (String newSetting) {
+                    updateTopics(newSetting);
                     setState(() {
                       schwarzesBrett = newSetting;
                       _refreshAll(); // Update the main page with new settings
                     });
-                  },
-                  onIntervalChanged: (int) {
-                    _initPlatformState(int);
                   },
                 )),
               );}
