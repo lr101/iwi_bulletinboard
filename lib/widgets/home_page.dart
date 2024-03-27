@@ -25,7 +25,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) =>  _refreshAll());
+    WidgetsBinding.instance.addPostFrameCallback((_) =>  _startup());
     _requestPermission(); // Request for alert permission
     WidgetsBinding.instance.addObserver(this); // Observer for detecting when the app is opened (via a notification)
   }
@@ -34,6 +34,19 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  Future<void> _startup() async {
+    await _loadSettings();
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    try {
+      list = prefs.getStringList("announcements")?.map((e) =>
+          Announcement.fromJson(json.decode((e)))).toList() ?? [];
+      setState(() {});
+    } catch (_) {}
+
+    await FirebaseMessaging.instance.subscribeToTopic(schwarzesBrett);
+    await _refreshAll();
   }
 
   Future<void> _requestPermission() async {
@@ -59,12 +72,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
   }
 
   Future<void> _refreshAll() async {
-    await _loadSettings();
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    this.list = await FetchNews.fetchAnnouncements(schwarzesBrett);
-    this.list.removeWhere((element) => element.publicationDate.isBefore(DateTime.now().subtract(Duration(days: 60))));
-    setState(() {});
-    prefs.setStringList("announcements", list.map((e) => json.encode(e.toJson())).toList());
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      this.list = await FetchNews.fetchAnnouncements(schwarzesBrett);
+      this.list.removeWhere((element) =>
+          element.publicationDate.isBefore(
+              DateTime.now().subtract(Duration(days: 60))));
+      setState(() {});
+      prefs.setStringList(
+          "announcements", list.map((e) => json.encode(e.toJson())).toList());
+    } catch(_) {}
   }
 
   Future<void> _loadSettings() async {
