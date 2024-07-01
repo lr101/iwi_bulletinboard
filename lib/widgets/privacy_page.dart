@@ -26,7 +26,7 @@ class PrivacyPage extends StatelessWidget {
               '7. Zustimmung\n'
               'Durch die Nutzung der App stimmen die Nutzer den Bedingungen dieser Datenschutzverordnung zu. Falls die Nutzer den Bedingungen nicht zustimmen, sollten sie die App nicht verwenden.\n\n'
               '8. Kontakt\n'
-              'Bei Fragen oder Anliegen bezüglich dieser Datenschutzverordnung können sich Nutzer über die in der App bereitgestellten Kontaktinformationen (lr.dev.projects@gmail.com) an den Datenschutzbeauftragten wenden.',
+              'Bei Fragen oder Anliegen bezüglich dieser Datenschutzverordnung können sich Nutzer über die in der App bereitgestellten Kontaktinformationen (info@lr-projects.de) an den Datenschutzbeauftragten wenden.',
           style: TextStyle(fontSize: 16),
         ),
       ),

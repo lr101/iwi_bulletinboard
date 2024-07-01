@@ -62,12 +62,12 @@ class _SettingsPage extends State<SettingsPage> {
                 title: Text('Kontakt'),
                 onPressed: (_) =>
                     Clipboard.setData(
-                        ClipboardData(text: "lr.dev.projects@gmail.com")).then((
+                        ClipboardData(text: "info@lr-projects.de")).then((
                         _) =>
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             content: Text("Email copied to clipboard")))
                     ),
-                value: Text("lr.dev.projects@gmail.com"),
+                value: Text("info@lr-projects.de"),
               ),
               SettingsTile.navigation(
                 leading: Icon(Icons.privacy_tip_outlined),

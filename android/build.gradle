@@ -5,8 +5,8 @@ buildscript {
         mavenCentral()
     }
     ext {
-        compileSdkVersion   = 33                // or latest
-        targetSdkVersion    = 33                // or latest
+        compileSdkVersion   = 34                // or latest
+        targetSdkVersion    = 34                // or latest
         appCompatVersion    = "1.4.2"           // or latest
     }
 

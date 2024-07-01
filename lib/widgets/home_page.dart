@@ -41,9 +41,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     try {
       list = prefs.getStringList("announcements")?.map((e) =>
-          Announcement.fromJson(json.decode((e)))).toList() ?? [];
+          Announcement.fromJson(json.decode(e))).toList() ?? [];
       setState(() {});
-    } catch (_) {}
+    } catch (e) {
+      print(e);
+    }
 
     await FirebaseMessaging.instance.subscribeToTopic(schwarzesBrett);
     await _refreshAll();
