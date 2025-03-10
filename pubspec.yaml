@@ -31,7 +31,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-
   http:
 
   intl:

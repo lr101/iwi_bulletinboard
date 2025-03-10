@@ -176,10 +176,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
                           list[index].title,
                           style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
                         ),
-                        SelectableText(
-                          list[index].subTitle,
-                          style: const TextStyle(fontSize: 16.0, fontStyle: FontStyle.italic),
-                        ),
                         const SizedBox(height: 10),
                         SelectableText(
                           list[index].content,
@@ -187,12 +183,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
                         ),
                         const SizedBox(height: 10),
                         SelectableText(
-                          "~ " + list[index].nameOwner,
+                          "~ " + list[index].creator,
                           style: const TextStyle(fontSize: 12.0, fontStyle: FontStyle.italic),
                         ),
                         const SizedBox(height: 5),
                         SelectableText(
-                          "~ published in: " + list[index].courseOfStudies.join(", "),
+                          "~ published in: " + list[index].coursesOfStudy.join(", "),
                           style: const TextStyle(fontSize: 12.0, fontStyle: FontStyle.italic),
                         ),
                       ],

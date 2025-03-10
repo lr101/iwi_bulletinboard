@@ -1,28 +1,8 @@
-buildscript {
-    ext.kotlin_version = '1.7.10'
-    repositories {
-        google()
-        mavenCentral()
-    }
-    ext {
-        compileSdkVersion   = 34                // or latest
-        targetSdkVersion    = 34                // or latest
-        appCompatVersion    = "1.4.2"           // or latest
-    }
-
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.android.tools.build:gradle:7.3.1'
-    }
-}
-
 allprojects {
     repositories {
         google()
         mavenCentral()
     }
-
 }
 
 rootProject.buildDir = '../build'
