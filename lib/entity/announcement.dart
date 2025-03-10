@@ -11,7 +11,7 @@ class Announcement implements Comparable<Announcement> {
   DateTime expirationDate;
   int id;
   String creator;
-  DateTime publicationDate;
+  DateTime publicationTimestamp;
   String title;
 
   Announcement({
@@ -20,7 +20,7 @@ class Announcement implements Comparable<Announcement> {
     required this.expirationDate,
     required this.id,
     required this.creator,
-    required this.publicationDate,
+    required this.publicationTimestamp,
     required this.title,
   });
 
@@ -31,7 +31,7 @@ class Announcement implements Comparable<Announcement> {
       expirationDate: DateTime.parse(json['expirationDate']),
       id: json['id'],
       creator: json['creator'],
-      publicationDate: DateTime.parse(json['publicationDate']),
+      publicationTimestamp: DateTime.parse(json['publicationTimestamp']),
       title: json['title'] as String,
     );
   }
@@ -43,7 +43,7 @@ class Announcement implements Comparable<Announcement> {
       expirationDate: DateTime.parse(json['expirationDate']),
       id: json['id'],
       creator: json['creator'],
-      publicationDate: DateTime.parse(json['publicationDate']),
+      publicationTimestamp: DateTime.parse(json['publicationTimestamp']),
       title: json['title'] is String ? utf8.decode((json['title'] as String).codeUnits, allowMalformed: true) : "",
     );
   }
@@ -55,7 +55,7 @@ class Announcement implements Comparable<Announcement> {
       'expirationDate': expirationDate.toIso8601String(),
       'id': id,
       'creator': creator,
-      'publicationDate': publicationDate.toIso8601String(),
+      'publicationTimestamp': publicationTimestamp.toIso8601String(),
       'title':  title,
     };
   }

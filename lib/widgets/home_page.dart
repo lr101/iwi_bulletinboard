@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:intl/intl.dart';
 import 'package:iwi_bulletinboard/api/fetch_news.dart';
 import 'package:iwi_bulletinboard/widgets/settings_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../entity/announcement.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -78,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       this.list = await FetchNews.fetchAnnouncements(schwarzesBrett);
       this.list.removeWhere((element) =>
-          element.publicationDate.isBefore(
+          element.publicationTimestamp.isBefore(
               DateTime.now().subtract(Duration(days: 60))));
       setState(() {});
       prefs.setStringList(
@@ -101,8 +102,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
     if (index == 0) {
       return true; // Always show the date for the first item
     }
-    DateTime prevDate = list[index - 1].publicationDate;
-    DateTime currDate = list[index].publicationDate;
+    DateTime prevDate = list[index - 1].publicationTimestamp;
+    DateTime currDate = list[index].publicationTimestamp;
     return DateFormat('yyyy-MM-dd').format(prevDate) != DateFormat('yyyy-MM-dd').format(currDate);
   }
 
@@ -136,8 +137,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
                 MaterialPageRoute(builder: (context) => SettingsPage(
                   schwarzesBrett: schwarzesBrett,
                   interval: interval,
-                  onSchwarzesBrettChanged: (String newSetting) {
-                    updateTopics(newSetting);
+                  onSchwarzesBrettChanged: (String newSetting) async {
+                    await updateTopics(newSetting);
                     setState(() {
                       schwarzesBrett = newSetting;
                       _refreshAll(); // Update the main page with new settings
@@ -160,7 +161,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
-                      DateFormat('dd.MM.yyyy').format(list[index].publicationDate),
+                      DateFormat('dd.MM.yyyy').format(list[index].publicationTimestamp),
                       style: const TextStyle(fontSize: 16.0, fontStyle: FontStyle.italic),
                     ),
                   ),
@@ -177,18 +178,25 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver  {
                           style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 10),
-                        SelectableText(
-                          list[index].content,
-                          style: const TextStyle(fontSize: 14.0),
+                        MarkdownBody(
+                            data: list[index].content,
+                            selectable: true,
+                            onTapLink: (text, url, title){
+                              launchUrl(Uri.parse(url!));
+                            },
                         ),
                         const SizedBox(height: 10),
-                        SelectableText(
+                        if (list[index].creator.isNotEmpty) SelectableText(
                           "~ " + list[index].creator,
                           style: const TextStyle(fontSize: 12.0, fontStyle: FontStyle.italic),
                         ),
-                        const SizedBox(height: 5),
+                        if (list[index].creator.isNotEmpty) const SizedBox(height: 5),
                         SelectableText(
                           "~ published in: " + list[index].coursesOfStudy.join(", "),
+                          style: const TextStyle(fontSize: 12.0, fontStyle: FontStyle.italic),
+                        ),
+                        SelectableText(
+                          "~ published at: " + DateFormat('HH:mm (dd. MMMM)').format(list[index].publicationTimestamp),
                           style: const TextStyle(fontSize: 12.0, fontStyle: FontStyle.italic),
                         ),
                       ],

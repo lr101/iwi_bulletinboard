@@ -14,7 +14,7 @@ class FetchNews {
   static Future<List<Announcement>> fetchAnnouncements(String topic) async {
     List<Announcement> members = [];
     Response response = await RestAPI.createHttpsRequest("$bulletinPath/$topic",
-        queryParameters: {"contentFormat": "text/plain"}
+        queryParameters: {"contentFormat": "text/markdown"}
     );
     if (response.statusCode == 200) {
       List<dynamic> values = json.decode(response.body);
