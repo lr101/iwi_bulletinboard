@@ -6,77 +6,57 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../api/fetch_news.dart';
 
 class Announcement implements Comparable<Announcement> {
-  bool changed;
   String content;
-  List<String> courseOfStudies;
-  bool deleteOnExpiration;
-  String emailOwner;
+  List<String> coursesOfStudy;
   DateTime expirationDate;
   int id;
-  int idOwner;
-  String nameOwner;
-  DateTime publicationDate;
+  String creator;
   DateTime publicationTimestamp;
-  bool studentCouncil;
-  String subTitle;
   String title;
-  String type;
 
   Announcement({
-    required this.changed,
     required this.content,
-    required this.courseOfStudies,
-    required this.deleteOnExpiration,
-    required this.emailOwner,
+    required this.coursesOfStudy,
     required this.expirationDate,
     required this.id,
-    required this.idOwner,
-    required this.nameOwner,
-    required this.publicationDate,
+    required this.creator,
     required this.publicationTimestamp,
-    required this.studentCouncil,
-    required this.subTitle,
     required this.title,
-    required this.type,
   });
 
   factory Announcement.fromJson(Map<String, dynamic> json) {
     return Announcement(
-      changed: json['changed'],
-      content: json['content'] is String ? utf8.decode((json['content'] as String).codeUnits) : "",
-      courseOfStudies: List<String>.from(json['courseOfStudies']),
-      deleteOnExpiration: json['deleteOnExpiration'],
-      emailOwner: json['emailOwner'],
+      content: json['content'] as String,
+      coursesOfStudy: List<String>.from(json['coursesOfStudy']),
       expirationDate: DateTime.parse(json['expirationDate']),
       id: json['id'],
-      idOwner: json['idOwner'],
-      nameOwner: json['nameOwner'],
-      publicationDate: DateTime.parse(json['publicationDate']),
+      creator: json['creator'],
       publicationTimestamp: DateTime.parse(json['publicationTimestamp']),
-      studentCouncil: json['studentCouncil'],
-      subTitle: json['subTitle'] is String ? utf8.decode((json['subTitle'] as String).codeUnits) : "",
-      title: json['title'] is String ? utf8.decode((json['title'] as String).codeUnits) : "",
-      type: json['type'],
+      title: json['title'] as String,
+    );
+  }
+
+  factory Announcement.fromJsonREST(Map<String, dynamic> json) {
+    return Announcement(
+      content: json['content'] is String ? utf8.decode((json['content'] as String).codeUnits, allowMalformed: true) : "",
+      coursesOfStudy: List<String>.from(json['coursesOfStudy']),
+      expirationDate: DateTime.parse(json['expirationDate']),
+      id: json['id'],
+      creator: json['creator'],
+      publicationTimestamp: DateTime.parse(json['publicationTimestamp']),
+      title: json['title'] is String ? utf8.decode((json['title'] as String).codeUnits, allowMalformed: true) : "",
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'changed': changed,
       'content': content,
-      'courseOfStudies': courseOfStudies,
-      'deleteOnExpiration': deleteOnExpiration,
-      'emailOwner': emailOwner,
+      'coursesOfStudy': coursesOfStudy,
       'expirationDate': expirationDate.toIso8601String(),
       'id': id,
-      'idOwner': idOwner,
-      'nameOwner': nameOwner,
-      'publicationDate': publicationDate.toIso8601String(),
+      'creator': creator,
       'publicationTimestamp': publicationTimestamp.toIso8601String(),
-      'studentCouncil': studentCouncil,
-      'subTitle': subTitle,
-      'title': title,
-      'type': type,
+      'title':  title,
     };
   }
 

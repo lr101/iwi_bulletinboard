@@ -1,28 +1,27 @@
-buildscript {
-    ext.kotlin_version = '1.7.10'
-    repositories {
-        google()
-        mavenCentral()
-    }
-    ext {
-        compileSdkVersion   = 33                // or latest
-        targetSdkVersion    = 33                // or latest
-        appCompatVersion    = "1.4.2"           // or latest
-    }
-
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.android.tools.build:gradle:7.3.1'
-    }
-}
-
 allprojects {
     repositories {
         google()
         mavenCentral()
     }
+}
 
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                if (namespace == null) {
+                    namespace = project.group
+                }
+            }
+        }
+        if (project.plugins.hasPlugin("com.android.application") ||
+                project.plugins.hasPlugin("com.android.library")) {
+            project.android {
+                compileSdkVersion 35
+                buildToolsVersion "35.0.0"
+            }
+        }
+    }
 }
 
 rootProject.buildDir = '../build'

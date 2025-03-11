@@ -12,11 +12,11 @@ class RestAPI {
   /// [encode] is the body formatted as json string; null: no body; String: body existing  -> Http ContentType is set to application/json
   /// [timeout] is the time in seconds until the requests times out, if null the default timeout time is used
   /// returns a http response
-  static Future<http.Response> createHttpsRequest (String path, Map<String,dynamic> queryParameters, int requestType, {String? encode, int timeout = 30}) async {
+  static Future<http.Response> createHttpsRequest (String path, {Map<String,dynamic> queryParameters = const {}, int requestType = 0, String? encode, int timeout = 30}) async {
     Map<String, String> header = {};
     if (encode != null) header["Content-Type"] = "application/json";
     //Uri uri = Uri(scheme: "http", host: "10.0.2.2", port: 3000, path: path, queryParameters: queryParameters);
-    Uri uri = Uri(scheme: "https", host: "intranet.hka-iwi.de", path: path, queryParameters: queryParameters);
+    Uri uri = Uri(scheme: "https", host: "raumzeit.hka-iwi.de", path: path, queryParameters: queryParameters);
     if (kDebugMode) {
       String uriDebug = "";
       switch (requestType) {
